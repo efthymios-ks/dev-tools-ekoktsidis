@@ -1,0 +1,7 @@
+<PropertyGroup>
+	<FineCodeCoverage>
+		<Enabled>True</Enabled>
+		<RunInParallel>True</RunInParallel>
+		<IncludeTestAssembly>False</IncludeTestAssembly>
+	</FineCodeCoverage>
+</PropertyGroup>
