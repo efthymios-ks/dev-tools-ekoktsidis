@@ -192,7 +192,7 @@ Features/
 # Options pattern
 
 - Use the options pattern for configuration management
-- Define a POCO class for options, typically a `record`
+- Define a POCO class for options
 - Create a class implementing `IConfigureOptions<T>` to bind config from a section
 - Register options config using `services.ConfigureOptions<T>()`
 - Inject `IOptions<T>` into services to access strongly-typed configuration values
