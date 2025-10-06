@@ -399,3 +399,4 @@ public static class DependencyInjection
 - When skipping tests, provide a meaningful reason: `[Fact(Skip = "Reason")]`
 - Use project’s established test infrastructure if available; otherwise use raw xUnit, AutoFixture, NSubstitute
 - Remain consistent with existing test patterns in the codebase
+- When using `NSubstitute` or other mocking libraries, prefer `default` and `default!` over `Arg.Any<T>()`, and use `ReturnsForAnyArgs` or `ReceivedWithAnyArgs` where applicable.
