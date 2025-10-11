@@ -36,6 +36,9 @@
 - Prefer arrow methods (`=>`) for simple logic or LINQ chains returning data
 - Always place the arrow (`=>`) on a new line for readability
 - Always create interface/implementation pairs for services, clients, maps, processing units
+- Use enums instead of magic strings for discrete value sets
+- Use constants instead of magic integers for fixed numeric values
+- In enums, always start values from 1 instead of defaulting to 0
 
 ---
 
