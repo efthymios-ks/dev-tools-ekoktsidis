@@ -6,6 +6,8 @@ $script:Colors = @{
     Success = "Green"
     Error = "Red"
     Warning = "Yellow"
+    Command = "Magenta"
+    MigrationName = "Cyan"
 }
 
 function Write-SectionHeader {
@@ -30,7 +32,10 @@ function Invoke-EfCommand {
     )
     
     # Build the full command with prefix output
-    $efCommand = "dotnet ef $command --prefix-output 2>&1"
+    $efCommand = "dotnet ef $command --prefix-output" 
+    Write-Host "Running: " -NoNewline
+    Write-Host $efCommand -ForegroundColor $script:Colors.Command 
+    $efCommand = $efCommand + " 2>&1"
     
     # Execute command
     $output = Invoke-Expression $efCommand | Out-String
@@ -283,7 +288,19 @@ function List-Migrations {
     }
     else {
         foreach ($migration in $result.DataLines) {
-            Write-Host $migration
+            # Parse migration: date_name (status)
+            if ($migration -match "^(\d+)_(.+?)\s*(\(.*\))?$") {
+                $date = $matches[1]
+                $name = $matches[2]
+                $status = $matches[3]
+                
+                Write-Host ("{0}_" -f $date) -NoNewline
+                Write-Host $name -NoNewline -ForegroundColor $script:Colors.MigrationName
+                Write-Host (" {0}" -f $status)
+            }
+            else {
+                Write-Host $migration
+            }
         }
     }
     
@@ -491,6 +508,31 @@ function Remove-Migration {
     Write-SectionFooter
 }
 
+function Check-PendingModelChanges {
+    param(
+        [string]$startupProject,
+        [string]$dataProject
+    )
+    
+    Write-SectionHeader "Check pending model changes"
+    
+    Write-Host "Checking for pending model changes..."
+    
+    $command = "migrations has-pending-model-changes --project `"$dataProject`" --startup-project `"$startupProject`""
+    $result = Invoke-EfCommand -command $command
+    
+    if (-not $result.Success) {
+        Write-Host "Pending model changes detected" -ForegroundColor $script:Colors.Warning
+        Write-Host "You need to create a new migration to reflect the model changes"
+    }
+    else {
+        Write-Host "No pending model changes" -ForegroundColor $script:Colors.Success
+        Write-Host "The current model matches the last migration"
+    }
+    
+    Write-SectionFooter
+}
+
 function Update-DotNetEfTool {
     Write-SectionHeader "Update dotnet-ef tool"
     
@@ -586,6 +628,10 @@ function Show-MainMenu {
     Write-Host "4" -ForegroundColor $script:Colors.MenuNumber -NoNewline
     Write-Host "] Remove migration"
     
+    Write-Host "[" -NoNewline
+    Write-Host "5" -ForegroundColor $script:Colors.MenuNumber -NoNewline
+    Write-Host "] Check pending model changes"
+    
     Write-Host ""
     
     Write-Host "[" -NoNewline
@@ -611,6 +657,7 @@ function Show-MainMenu {
         "2" { Add-Migration -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
         "3" { Update-Database -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
         "4" { Remove-Migration -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
+        "5" { Check-PendingModelChanges -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
         "8" { Update-DotNetEfTool; Show-MainMenu -config $config }
         "9" { Reset-Config }
         "0" { Write-Host "Exiting..."; exit 0 }
