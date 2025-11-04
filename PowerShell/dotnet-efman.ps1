@@ -26,6 +26,28 @@ function Write-SectionFooter {
     Write-Host ""
 }
 
+function Write-MigrationsList {
+    param(
+        [array]$migrations
+    )
+    
+    foreach ($migration in $migrations) {
+        # Parse migration: date_name (status)
+        if ($migration -match "^(\d+)_(.+?)\s*(\(.*\))?$") {
+            $date = $matches[1]
+            $name = $matches[2]
+            $status = $matches[3]
+            
+            Write-Host ("{0}_" -f $date) -NoNewline
+            Write-Host $name -NoNewline -ForegroundColor $script:Colors.MigrationName
+            Write-Host (" {0}" -f $status)
+        }
+        else {
+            Write-Host $migration
+        }
+    }
+}
+
 function Invoke-EfCommand {
     param(
         [string]$command
@@ -287,21 +309,7 @@ function List-Migrations {
         Write-Host "No migrations found"
     }
     else {
-        foreach ($migration in $result.DataLines) {
-            # Parse migration: date_name (status)
-            if ($migration -match "^(\d+)_(.+?)\s*(\(.*\))?$") {
-                $date = $matches[1]
-                $name = $matches[2]
-                $status = $matches[3]
-                
-                Write-Host ("{0}_" -f $date) -NoNewline
-                Write-Host $name -NoNewline -ForegroundColor $script:Colors.MigrationName
-                Write-Host (" {0}" -f $status)
-            }
-            else {
-                Write-Host $migration
-            }
-        }
+        Write-MigrationsList -migrations $result.DataLines
     }
     
     Write-SectionFooter
@@ -470,9 +478,7 @@ function Remove-Migration {
     
     Write-Host ""
     Write-Host "Current migrations:"
-    foreach ($migration in $listResult.DataLines) {
-        Write-Host $migration
-    }
+    Write-MigrationsList -migrations $listResult.DataLines
     
     Write-Host ""
     Write-Host "This will remove the last migration"
