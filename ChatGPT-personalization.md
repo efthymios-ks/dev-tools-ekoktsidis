@@ -9,4 +9,4 @@
 -Unit tests: xUnit, AutoFixture, NSubstitute  
 -Name tests Method_WhenCondition_ShouldResult  
 -One test class per production class  
--Technologies: Latest .NET Core, ASP.NET Core, EF Core, MS SQL. 
+-Technologies: Latest .NET Core, ASP.NET Core, EF Core, MS SQL  
