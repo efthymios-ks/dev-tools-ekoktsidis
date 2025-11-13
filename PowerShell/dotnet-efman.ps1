@@ -611,6 +611,63 @@ function Reset-Config {
     exit
 }
 
+function Show-ConnectionInfo {
+    param(
+        [string]$startupProject,
+        [string]$dataProject
+    )
+    
+    Write-SectionHeader "Connection info"
+    
+    Write-Host "Retrieving database connection information..."
+    
+    $command = "dbcontext info --project `"$dataProject`" --startup-project `"$startupProject`""
+    $result = Invoke-EfCommand -command $command
+    
+    if (-not $result.Success) {
+        Write-Host "ERROR: Failed to retrieve connection info" -ForegroundColor $script:Colors.Error
+        foreach ($error in $result.ErrorMessages) {
+            Write-Host $error -ForegroundColor $script:Colors.Error
+        }
+    }
+    elseif ($result.DataLines.Count -eq 0) {
+        Write-Host "No connection information found"
+    }
+    else {
+        Write-Host ""
+        
+        # Parse all data into dictionary
+        $connectionInfo = @{}
+        foreach ($line in $result.DataLines) {
+            if ($line -match "^(.+?):\s*(.+)$") {
+                $key = $matches[1].Trim()
+                $value = $matches[2].Trim()
+                $connectionInfo[$key] = $value
+            }
+        }
+        
+        # Find the longest key for alignment
+        $maxKeyLength = 0
+        foreach ($key in $connectionInfo.Keys) {
+            if ($key.Length -gt $maxKeyLength) {
+                $maxKeyLength = $key.Length
+            }
+        }
+        
+        # Display formatted output
+        foreach ($key in $connectionInfo.Keys) {
+            $paddedKey = $key.PadLeft($maxKeyLength)
+            Write-Host $paddedKey -ForegroundColor $script:Colors.MenuNumber -NoNewline
+            Write-Host ": " -NoNewline
+            Write-Host $connectionInfo[$key]
+        }
+        
+        Write-Host ""
+    }
+    
+    Write-SectionFooter
+}
+
 function Show-MainMenu {
     param(
         [object]$config
@@ -641,16 +698,16 @@ function Show-MainMenu {
     Write-Host ""
     
     Write-Host "[" -NoNewline
+    Write-Host "7" -ForegroundColor $script:Colors.MenuNumber -NoNewline
+    Write-Host "] Connection info"
+    
+    Write-Host "[" -NoNewline
     Write-Host "8" -ForegroundColor $script:Colors.MenuNumber -NoNewline
     Write-Host "] Update dotnet-ef tool"
     
     Write-Host "[" -NoNewline
     Write-Host "9" -ForegroundColor $script:Colors.MenuNumber -NoNewline
     Write-Host "] Reset configuration"
-    
-    Write-Host "[" -NoNewline
-    Write-Host "0" -ForegroundColor $script:Colors.MenuNumber -NoNewline
-    Write-Host "] Exit"
     
     Write-Host ""
     
@@ -664,9 +721,9 @@ function Show-MainMenu {
         "3" { Update-Database -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
         "4" { Remove-Migration -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
         "5" { Check-PendingModelChanges -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
+        "7" { Show-ConnectionInfo -startupProject $config.StartupProject -dataProject $config.DataProject; Show-MainMenu -config $config }
         "8" { Update-DotNetEfTool; Show-MainMenu -config $config }
         "9" { Reset-Config }
-        "0" { Write-Host "Exiting..."; exit 0 }
         default { 
             Write-Host "ERROR: Invalid selection" -ForegroundColor $script:Colors.Error
             Show-MainMenu -config $config
