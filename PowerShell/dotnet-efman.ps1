@@ -646,16 +646,19 @@ function Show-ConnectionInfo {
             }
         }
         
+        # Sort keys alphabetically
+        $sortedKeys = $connectionInfo.Keys | Sort-Object
+        
         # Find the longest key for alignment
         $maxKeyLength = 0
-        foreach ($key in $connectionInfo.Keys) {
+        foreach ($key in $sortedKeys) {
             if ($key.Length -gt $maxKeyLength) {
                 $maxKeyLength = $key.Length
             }
         }
         
-        # Display formatted output
-        foreach ($key in $connectionInfo.Keys) {
+        # Display formatted output with sorted keys
+        foreach ($key in $sortedKeys) {
             $paddedKey = $key.PadLeft($maxKeyLength)
             Write-Host $paddedKey -ForegroundColor $script:Colors.MenuNumber -NoNewline
             Write-Host ": " -NoNewline
